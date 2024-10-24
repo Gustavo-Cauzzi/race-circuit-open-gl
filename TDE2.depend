@@ -1,0 +1,118 @@
+# depslib dependency file v1.0
+1603578673 source:/home/krohn/LinguagemC/GLFW_Coordenadas_3D_Cubo/main.cpp
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<stb_image.h>
+	<glm/glm.hpp>
+	<glm/gtc/matrix_transform.hpp>
+	<glm/gtc/type_ptr.hpp>
+	<Shader.h>
+	<iostream>
+
+1601601638 /home/krohn/LinguagemC/GLFW_Coordenadas_3D_Cubo/include/glad/glad.h
+	<KHR/khrplatform.h>
+
+1603045863 /home/krohn/LinguagemC/GLFW_Coordenadas_3D_Cubo/include/stb_image.h
+	"stb_image.h"
+	<stdio.h>
+	<stdlib.h>
+	<stdarg.h>
+	<stddef.h>
+	<stdlib.h>
+	<string.h>
+	<limits.h>
+	<math.h>
+	<stdio.h>
+	<assert.h>
+	<stdint.h>
+	<emmintrin.h>
+	<intrin.h>
+	<arm_neon.h>
+
+1603120690 /home/krohn/LinguagemC/GLFW_Coordenadas_3D_Cubo/include/Shader.h
+	<GL/glew.h>
+	<glm/glm.hpp>
+	<string>
+	<fstream>
+	<sstream>
+	<iostream>
+
+1603045934 source:/home/krohn/LinguagemC/GLFW_Coordenadas_3D_Cubo/include/stb_image.cpp
+	"stb_image.h"
+
+1603593754 source:/home/gustavo/ucs/grafica/opengl/GLFW_Coordenadas_3D_Cubo/include/stb_image.cpp
+	"stb_image.h"
+
+1603593754 /home/gustavo/ucs/grafica/opengl/GLFW_Coordenadas_3D_Cubo/include/stb_image.h
+	"stb_image.h"
+	<stdio.h>
+	<stdlib.h>
+	<stdarg.h>
+	<stddef.h>
+	<stdlib.h>
+	<string.h>
+	<limits.h>
+	<math.h>
+	<stdio.h>
+	<assert.h>
+	<stdint.h>
+	<emmintrin.h>
+	<intrin.h>
+	<arm_neon.h>
+
+1729556787 source:/home/gustavo/ucs/grafica/opengl/GLFW_Coordenadas_3D_Cubo/main.cpp
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<stb_image.h>
+	<glm/glm.hpp>
+	<glm/gtc/matrix_transform.hpp>
+	<glm/gtc/type_ptr.hpp>
+	<Shader.h>
+	<iostream>
+
+1603593754 /home/gustavo/ucs/grafica/opengl/GLFW_Coordenadas_3D_Cubo/include/Shader.h
+	<GL/glew.h>
+	<glm/glm.hpp>
+	<string>
+	<fstream>
+	<sstream>
+	<iostream>
+
+1729557371 source:/home/gustavo/ucs/grafica/opengl/TDE2/include/stb_image.cpp
+	"stb_image.h"
+
+1729557371 /home/gustavo/ucs/grafica/opengl/TDE2/include/stb_image.h
+	"stb_image.h"
+	<stdio.h>
+	<stdlib.h>
+	<stdarg.h>
+	<stddef.h>
+	<stdlib.h>
+	<string.h>
+	<limits.h>
+	<math.h>
+	<stdio.h>
+	<assert.h>
+	<stdint.h>
+	<emmintrin.h>
+	<intrin.h>
+	<arm_neon.h>
+
+1729557371 source:/home/gustavo/ucs/grafica/opengl/TDE2/main.cpp
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<stb_image.h>
+	<glm/glm.hpp>
+	<glm/gtc/matrix_transform.hpp>
+	<glm/gtc/type_ptr.hpp>
+	<Shader.h>
+	<iostream>
+
+1729557371 /home/gustavo/ucs/grafica/opengl/TDE2/include/Shader.h
+	<GL/glew.h>
+	<glm/glm.hpp>
+	<string>
+	<fstream>
+	<sstream>
+	<iostream>
+
