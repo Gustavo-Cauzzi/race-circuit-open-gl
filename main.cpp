@@ -99,6 +99,7 @@ int main()
     // build and compile our shader zprogram
     // ------------------------------------
     Shader ourShader("vertex.glsl", "fragment.glsl");
+    Shader carroShader("vertexCarro.glsl", "fragmentCarro.glsl");
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -151,8 +152,84 @@ int main()
         -1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
         1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
         1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-
     };
+
+    float carVertices[] = {
+        // body triangle 1 front
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, -0.2f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+
+        // body triangle 2 front
+        -1.0f, -0.2f, 1.0f,
+        1.0f, -0.2f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+
+        // window triangle 1 front
+        -0.7f, -0.2f, 1.0f,
+        -0.7f, 1.0f, 1.0f,
+        0.5f, -0.2f, 1.0f,
+
+        // window triangle 2 front
+        -0.7f, 1.0f, 1.0f,
+        0.5f, 1.0f, 1.0f,
+        0.5f, -0.2f, 1.0f,
+
+        // Upper part
+        // body triangle 1 upper
+        -1.0f, -0.2f, 1.0f,
+        -1.0f, -0.2f, -1.0f,
+        -0.7f, -0.2f, -1.0f,
+
+        // body triangle 2 upper
+        -1.0f, -0.2f, 1.0f,
+        -0.7f, -0.2f, -1.0f,
+        -0.7f, -0.2f, 1.0f,
+
+        // ceiling triangle 1 upper
+        -0.7f, 1.0f, 1.0f,
+        -0.7f, 1.0f, -1.0f,
+        0.5f, 1.0f, -1.0f,
+
+        // ceiling triangle 2 upper
+        -0.7f, 1.0f, 1.0f,
+        0.5f, 1.0f, -1.0f,
+        0.5f, 1.0f, 1.0f,
+
+        // front triangle 1 upper
+        0.5f, -0.2f, 1.0f,
+        0.5f, -0.2f, -1.0f,
+        1.0f, -0.2f, -1.0f,
+
+        // front triangle 2 upper
+        0.5f, -0.2f, 1.0f,
+        1.0f, -0.2f, -1.0f,
+        1.0f, -0.2f, 1.0f,
+
+        // Front
+        // bottom triangle 1 front
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -0.2f, -1.0f,
+
+        // bottom triangle 2 front
+        -1.0f, -0.2f, -1.0f,
+        -1.0f, -0.2f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        // upper triangle 1 front
+        -0.7f, -0.2f, -1.0f,
+        -0.7f, 1.0f, -1.0f,
+        -0.7f, -0.2f, 1.0f,
+
+        // upper triangle 2 front
+        -0.7f, 1.0f, -1.0f,
+        -0.7f, 1.0f, 1.0f,
+        -0.7f, -0.2f, 1.0f,
+
+        // TODO: Replicar reflexo das faces
+    };
+
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -236,7 +313,6 @@ int main()
         view  = glm::translate(view, glm::vec3(0.05f, -0.25f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
-
         viraCamera(0.0f, 0.0f);
 
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
@@ -250,9 +326,13 @@ int main()
         // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
         ourShader.setMat4("projection", projection);
 
+
+
         // render box
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
