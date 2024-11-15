@@ -58,6 +58,57 @@ void viraCamera(float x, float y) {
         cameraFront = glm::normalize(direction);
 }
 
+// Funções para compilar shaders
+GLuint compileShader(const char* vertexSource, const char* fragmentSource);
+void checkShaderCompileStatus(GLuint shader);
+void checkProgramLinkStatus(GLuint program);
+// Processar eventos de teclado
+void processInput(GLFWwindow *window, float *x, float *y, float *z);
+
+// Shaders (cada objeto terá um shader próprio)
+const char* floorFragmentShader = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "in vec2 TexCoord;\n"
+    "uniform sampler2D texture1;\n"
+    "void main()\n"
+    "{\n"
+    "	FragColor = texture(texture1, TexCoord);\n"
+    "}\n"
+;
+
+const char* floorVertexShader = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec2 aTexCoord;\n"
+    "out vec2 TexCoord;\n"
+    "uniform mat4 model;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
+    "	TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
+    "}\n";
+
+const char* carFragmentShader = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "	FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+    "}\n"
+;
+
+const char* carVertexShader = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "uniform mat4 model;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
+    "}\n"
+;
+
+
 int main()
 {
     // glfw: initialize and configure
@@ -98,8 +149,9 @@ int main()
 
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader ourShader("vertex.glsl", "fragment.glsl");
-    Shader carroShader("vertexCarro.glsl", "fragmentCarro.glsl");
+    GLuint floorShaderProgram = compileShader(floorVertexShader, floorFragmentShader);
+    GLuint carShaderProgram = compileShader(carVertexShader, carFragmentShader);
+
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -230,21 +282,27 @@ int main()
         // TODO: Replicar reflexo das faces
     };
 
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    unsigned int VBOs[2], VAOs[2];
+    glGenVertexArrays(2, VAOs);
+    glGenBuffers(2, VBOs);
 
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // Floor
+    glBindVertexArray(VAOs[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // texture coord attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    // Car
+    glBindVertexArray(VAOs[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(carVertices), carVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
 
     // load and create a texture
@@ -277,8 +335,8 @@ int main()
 
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
-    ourShader.use();
-    ourShader.setInt("texture1", 0);
+    glUseProgram(floorShaderProgram);
+    glUniform1i(glGetUniformLocation(floorShaderProgram, "texture1"), 0); // ourShader.setInt("texture1", 0);
 
     // render loop
     // -----------
@@ -299,16 +357,17 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture1);
 
         // activate shader
-        ourShader.use();
+        glUseProgram(floorShaderProgram);
 
         // create transformations
         glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
 
-        model = glm::rotate(model, 0.2f, glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, 0.75f, glm::vec3(0.0f, 1.0f, 0.0f));
+        // model = glm::rotate(model, 0.2f, glm::vec3(0.0f, 1.0f, 0.0f));
+        // model = glm::rotate(model, 0.75f, glm::vec3(0.0f, 1.0f, 0.0f));
         // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, -0.5f, 0.0f)); // Com movimentação (ajuda pra debug)
+        model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
 
         view  = glm::translate(view, glm::vec3(0.05f, -0.25f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -318,21 +377,29 @@ int main()
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         // retrieve the matrix uniform locations
-        unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
-        unsigned int viewLoc  = glGetUniformLocation(ourShader.ID, "view");
+        unsigned int modelLoc = glGetUniformLocation(floorShaderProgram, "model");
+        unsigned int viewLoc  = glGetUniformLocation(floorShaderProgram, "view");
+        unsigned int projectionLoc  = glGetUniformLocation(floorShaderProgram, "projection");
         // pass them to the shaders (3 different ways)
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
-        // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
-        ourShader.setMat4("projection", projection);
-
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 
         // render box
-        glBindVertexArray(VAO);
+        glBindVertexArray(VAOs[0]);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
+        glUseProgram(carShaderProgram);
 
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.2f));
+        model = glm::translate(model, glm::vec3(0.0f, -1.5f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glBindVertexArray(VAOs[1]);
+        glDrawArrays(GL_TRIANGLES, 0, 42);
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -343,8 +410,8 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(2, VAOs);
+    glDeleteBuffers(2, VBOs);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -399,4 +466,50 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
 }
+
+
+// Funções auxiliares
+GLuint compileShader(const char* vertexSource, const char* fragmentSource) {
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexSource, NULL);
+    glCompileShader(vertexShader);
+    checkShaderCompileStatus(vertexShader);
+
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
+    glCompileShader(fragmentShader);
+    checkShaderCompileStatus(fragmentShader);
+
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    checkProgramLinkStatus(shaderProgram);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    return shaderProgram;
+}
+
+void checkShaderCompileStatus(GLuint shader) {
+    int success;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+        fprintf(stderr, "Erro de compilação de shader: %s\n", infoLog);
+    }
+}
+
+void checkProgramLinkStatus(GLuint program) {
+    int success;
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetProgramInfoLog(program, 512, NULL, infoLog);
+        fprintf(stderr, "Erro ao linkar programa: %s\n", infoLog);
+    }
+}
+
 
