@@ -368,6 +368,7 @@ int main()
         // model = glm::rotate(model, 0.75f, glm::vec3(0.0f, 1.0f, 0.0f));
         // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, -0.5f, 0.0f)); // Com movimentação (ajuda pra debug)
         model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
+        model = glm::scale(model, glm::vec3(2.0f));
 
         view  = glm::translate(view, glm::vec3(0.05f, -0.25f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -394,7 +395,7 @@ int main()
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.2f));
-        model = glm::translate(model, glm::vec3(2.5f, -1.5f, 0.0f));
+        model = glm::translate(model, glm::vec3(5.0f, -1.5f, 0.0f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
