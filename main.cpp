@@ -11,7 +11,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 void animateCar(glm::mat4* model);
 
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraPos   = glm::vec3(5.0f, 2.0f,  5.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
@@ -29,7 +29,7 @@ float yaw = -90.0f;
 float pitch = 0.0f;
 float zoom = 45.0f;
 void reset() {
-    cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+    cameraPos   = glm::vec3(4.0f, 0.0f,  34.0f);
     cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 
@@ -292,6 +292,16 @@ int main()
         -0.7f, 0.75f, -1.0f,
         0.5f, 0.75f, -1.0f,
         0.5f, -0.2f, -1.0f,
+
+        // upper triangle 1 front
+        0.5f, -0.2f, -1.0f,
+        0.5f, 0.75f, -1.0f,
+        0.5f, -0.2f, 1.0f,
+
+        // upper triangle 2 front
+        0.5f, 0.75f, -1.0f,
+        0.5f, 0.75f, 1.0f,
+        0.5f, -0.2f, 1.0f,
     };
 
     unsigned int VBOs[2], VAOs[2];
@@ -350,6 +360,8 @@ int main()
     glUseProgram(floorShaderProgram);
     glUniform1i(glGetUniformLocation(floorShaderProgram, "texture1"), 0); // ourShader.setInt("texture1", 0);
 
+
+    viraCamera(-50.0f, -20.0f);
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -385,8 +397,6 @@ int main()
         view  = glm::translate(view, glm::vec3(0.05f, -0.25f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
-        viraCamera(0.0f, 0.0f);
-
         view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         // retrieve the matrix uniform locations
@@ -414,7 +424,7 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glBindVertexArray(VAOs[1]);
-        glDrawArrays(GL_TRIANGLES, 0, 72);
+        glDrawArrays(GL_TRIANGLES, 0, 81);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
