@@ -386,7 +386,7 @@ int main()
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 
-        // render box
+        // Car
         glBindVertexArray(VAOs[0]);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -394,12 +394,15 @@ int main()
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.2f));
-        model = glm::translate(model, glm::vec3(0.0f, -1.5f, 0.0f));
+        model = glm::translate(model, glm::vec3(2.5f, -1.5f, 0.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glBindVertexArray(VAOs[1]);
         glDrawArrays(GL_TRIANGLES, 0, 42);
+
+
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
