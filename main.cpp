@@ -9,6 +9,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
+void animateCar(glm::mat4* model);
 
 glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -17,6 +18,10 @@ glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+const bool animate = true;
+
+glm::vec3 carPosition = glm::vec3(1.0f);
+float carRotation = 0;
 
 /* Camera */
 float sensitivity = 1.0f;
@@ -368,7 +373,7 @@ int main()
         // model = glm::rotate(model, 0.75f, glm::vec3(0.0f, 1.0f, 0.0f));
         // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.0f, -0.5f, 0.0f)); // Com movimentação (ajuda pra debug)
         model = glm::translate(model, glm::vec3(0.0f, -0.5f, 0.0f));
-        model = glm::scale(model, glm::vec3(2.0f));
+        model = glm::scale(model, glm::vec3(2.0f, 2.0f, 4.0f));
 
         view  = glm::translate(view, glm::vec3(0.05f, -0.25f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -395,16 +400,14 @@ int main()
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.2f));
-        model = glm::translate(model, glm::vec3(5.0f, -1.5f, 0.0f));
+        model = glm::translate(model, glm::vec3(2.5f, -2.5f, 0.0f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        animateCar(&model);
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glBindVertexArray(VAOs[1]);
         glDrawArrays(GL_TRIANGLES, 0, 42);
-
-
-
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -421,6 +424,18 @@ int main()
     // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
+}
+
+void animateCar(glm::mat4* model) {
+    if (!animate) return;
+
+    float clock = (float) glfwGetTime();
+    printf("%f ", clock);
+    if (clock < 2) {
+
+        carPosition.x -= 0.03;
+    }
+    *model = glm::translate(*model, carPosition);
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
