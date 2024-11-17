@@ -400,7 +400,7 @@ int main()
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.2f));
-        model = glm::translate(model, glm::vec3(2.5f, -2.5f, 0.0f));
+        model = glm::translate(model, glm::vec3(3.5f, -2.5f, 0.0f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         animateCar(&model);
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
@@ -428,12 +428,33 @@ int main()
 
 void animateCar(glm::mat4* model) {
     if (!animate) return;
+    static int lap = 0;
 
-    float clock = (float) glfwGetTime();
-    printf("%f ", clock);
-    if (clock < 2) {
-
+    float clock = ((float) glfwGetTime()) - (14.2 * lap);
+    if (clock < 2.2) {
         carPosition.x -= 0.03;
+    } else if (clock < 5.5) {
+        carPosition.z -= 0.02;
+        float c = (clock - 2.2) * 6;
+        float xVelocity = (-0.01*c*c+0.2*c-1)/33.33;
+        if (c >= 10) {
+            xVelocity *= -1;
+        }
+        carPosition.x += xVelocity;
+    } else if (clock < 9.3) {
+        carPosition.x += 0.03;
+    } else if (clock < 12.6) {
+        carPosition.z += 0.02;
+        float c = (clock - 9.3) * 6;
+        float xVelocity = (0.01*c*c-0.2*c+1)/33.33;
+        if (c >= 10) {
+            xVelocity *= -1;
+        }
+        carPosition.x += xVelocity;
+    } else if (clock < 14.2) {
+        carPosition.x -= 0.03;
+    } else {
+        lap++;
     }
     *model = glm::translate(*model, carPosition);
 }
