@@ -170,7 +170,7 @@ int main()
         1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
     };
 
-    float carVertices[] = {
+   float carVertices[] = {
         // body triangle 1 front
         -1.0f, -1.0f, 1.0f,
         -1.0f, -0.2f, 1.0f,
@@ -183,12 +183,12 @@ int main()
 
         // window triangle 1 front
         -0.7f, -0.2f, 1.0f,
-        -0.7f, 1.0f, 1.0f,
+        -0.7f, 0.75f, 1.0f,
         0.5f, -0.2f, 1.0f,
 
         // window triangle 2 front
-        -0.7f, 1.0f, 1.0f,
-        0.5f, 1.0f, 1.0f,
+        -0.7f, 0.75f, 1.0f,
+        0.5f, 0.75f, 1.0f,
         0.5f, -0.2f, 1.0f,
 
         // Upper part
@@ -203,14 +203,14 @@ int main()
         -0.7f, -0.2f, 1.0f,
 
         // ceiling triangle 1 upper
-        -0.7f, 1.0f, 1.0f,
-        -0.7f, 1.0f, -1.0f,
-        0.5f, 1.0f, -1.0f,
+        -0.7f, 0.75f, 1.0f,
+        -0.7f, 0.75f, -1.0f,
+        0.5f, 0.75f, -1.0f,
 
         // ceiling triangle 2 upper
-        -0.7f, 1.0f, 1.0f,
-        0.5f, 1.0f, -1.0f,
-        0.5f, 1.0f, 1.0f,
+        -0.7f, 0.75f, 1.0f,
+        0.5f, 0.75f, -1.0f,
+        0.5f, 0.75f, 1.0f,
 
         // front triangle 1 upper
         0.5f, -0.2f, 1.0f,
@@ -235,15 +235,63 @@ int main()
 
         // upper triangle 1 front
         -0.7f, -0.2f, -1.0f,
-        -0.7f, 1.0f, -1.0f,
+        -0.7f, 0.75f, -1.0f,
         -0.7f, -0.2f, 1.0f,
 
         // upper triangle 2 front
-        -0.7f, 1.0f, -1.0f,
-        -0.7f, 1.0f, 1.0f,
+        -0.7f, 0.75f, -1.0f,
+        -0.7f, 0.75f, 1.0f,
         -0.7f, -0.2f, 1.0f,
 
-        // TODO: Replicar reflexo das faces
+        // Back triangle 1
+        1.0f, -1.0f, -1.0f,
+        1.0f, -0.2f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+
+        // Back triangle 2
+        1.0f, -0.2f, -1.0f,
+        -1.0f, -0.2f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+
+        // Bottom triangle 1
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+
+        // Bottom triangle 2
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,
+
+        // Right side triangle 1
+        1.0f, -1.0f, 1.0f,
+        1.0f, -0.2f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        // Right side triangle 2
+        1.0f, -0.2f, 1.0f,
+        1.0f, -0.2f, -1.0f,
+        1.0f, -1.0f, -1.0f,
+
+        // Left side triangle 1
+        -1.0f, -1.0f, 1.0f,
+        -1.0f, -0.2f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+
+        // Left side triangle 2
+        -1.0f, -0.2f, 1.0f,
+        -1.0f, -0.2f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+
+        // Rear window triangle 1
+        -0.7f, -0.2f, -1.0f,
+        -0.7f, 0.75f, -1.0f,
+        0.5f, -0.2f, -1.0f,
+
+        // Rear window triangle 2
+        -0.7f, 0.75f, -1.0f,
+        0.5f, 0.75f, -1.0f,
+        0.5f, -0.2f, -1.0f,
     };
 
     unsigned int VBOs[2], VAOs[2];
@@ -366,7 +414,7 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glBindVertexArray(VAOs[1]);
-        glDrawArrays(GL_TRIANGLES, 0, 42);
+        glDrawArrays(GL_TRIANGLES, 0, 72);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
