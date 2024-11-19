@@ -129,7 +129,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Coordenadas OpenGL : Cubo", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "TDE2", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -443,35 +443,36 @@ int main()
     return 0;
 }
 
+float velocityMultiplier = 2.5;
 void animateCar(glm::mat4* model) {
     if (!animate) return;
     static int lap = 0;
 
     float clock = ((float) glfwGetTime()) - (14.2 * lap);
     if (clock < 2.2) {
-        carPosition.x -= 0.03;
+        carPosition.x -= 0.03 * multiplier;
     } else if (clock < 5.5) {
-        carPosition.z -= 0.02;
+        carPosition.z -= 0.02 * multiplier;
         float c = (clock - 2.2) * 6;
         float xVelocity = (-0.01*c*c+0.2*c-1)/33.33;
         if (c >= 10) {
             xVelocity *= -1;
         }
-        carPosition.x += xVelocity;
+        carPosition.x += xVelocity * multiplier;
         carRotation = -180 * (clock-2.2)/(5.5-2.2);
     } else if (clock < 9.3) {
-        carPosition.x += 0.03;
+        carPosition.x += 0.03 * multiplier;
     } else if (clock < 12.6) {
-        carPosition.z += 0.02;
+        carPosition.z += 0.02  * multiplier;
         float c = (clock - 9.3) * 6;
         float xVelocity = (0.01*c*c-0.2*c+1)/33.33;
         if (c >= 10) {
             xVelocity *= -1;
         }
-        carPosition.x += xVelocity;
+        carPosition.x += xVelocity * multiplier;
         carRotation = -180 - (180 * (clock-9.3)/(12.6-9.3));
     } else if (clock < 14.2) {
-        carPosition.x -= 0.03;
+        carPosition.x -= 0.03 * multiplier;
     } else {
         lap++;
     }
