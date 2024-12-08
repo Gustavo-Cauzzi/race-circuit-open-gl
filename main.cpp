@@ -1,10 +1,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <stb_image.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <Shader.h>
+#include <C:\Users\55549\local\Documentos\UCS\computacao_grafica\race-circuit-open-gl\include\stb_image.h>
+#include <C:\glm\glm\glm.hpp>
+#include <C:\glm\glm\gtc\matrix_transform.hpp>
+#include <C:\glm\glm\gtc\type_ptr.hpp>
+#include <C:\Users\55549\local\Documentos\UCS\computacao_grafica\race-circuit-open-gl\include\Shader.h>
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -71,48 +71,275 @@ void checkProgramLinkStatus(GLuint program);
 void processInput(GLFWwindow *window, float *x, float *y, float *z);
 
 // Shaders (cada objeto terá um shader próprio)
-const char* floorFragmentShader = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec2 TexCoord;\n"
-    "uniform sampler2D texture1;\n"
-    "void main()\n"
-    "{\n"
-    "	FragColor = texture(texture1, TexCoord);\n"
-    "}\n"
-;
+//const char* floorFragmentShader = "#version 330 core\n"
+//    "out vec4 FragColor;\n"
+//    "in vec2 TexCoord;\n"
+//    "uniform sampler2D texture1;\n"
+//    "void main()\n"
+//    "{\n"
+//    "	FragColor = texture(texture1, TexCoord);\n"
+//    "}\n"
+//;
 
-const char* floorVertexShader = "#version 330 core\n"
+//const char* floorFragmentShader = R"(
+//    #version 330 core
+//    out vec4 FragColor;
+//
+//    in vec3 FragPos;
+//    in vec3 Normal;
+//    in vec2 TexCoord;
+//
+//    uniform sampler2D texture1;
+//    uniform vec3 lightPos;
+//    uniform vec3 lightColor;
+//    uniform vec3 viewPos;
+//
+//    void main()
+//    {
+//        // Ambiente
+//        float ambientStrength = 0.1;
+//        vec3 ambient = ambientStrength * lightColor;
+//
+//        // Difuso
+//        vec3 norm = normalize(Normal);
+//        vec3 lightDir = normalize(lightPos - FragPos);
+//        float diff = max(dot(norm, lightDir), 0.0);
+//        vec3 diffuse = diff * lightColor;
+//
+//        // Especular
+//        float specularStrength = 0.5;
+//        vec3 viewDir = normalize(viewPos - FragPos);
+//        vec3 reflectDir = reflect(-lightDir, norm);
+//        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+//        vec3 specular = specularStrength * spec * lightColor;
+//
+//        vec3 result = (ambient + diffuse + specular) * texture(texture1, TexCoord).rgb;
+//        FragColor = vec4(result, 1.0);
+//    }
+//)";
+
+const char* floorFragmentShader = R"(
+    #version 330 core
+    out vec4 FragColor;
+
+    in vec3 FragPos;
+    in vec3 Normal;
+    in vec2 TexCoord;
+
+    uniform sampler2D texture1;
+    uniform vec3 lightPos;
+    uniform vec3 lightColor;
+    uniform vec3 viewPos;
+
+    void main()
+    {
+        // Textura
+        vec3 texColor = texture(texture1, TexCoord).rgb;
+
+        // Ambiente
+        float ambientStrength = 0.1;
+        vec3 ambient = ambientStrength * lightColor;
+
+        // Difuso
+        vec3 norm = normalize(Normal);
+        vec3 lightDir = normalize(lightPos - FragPos);
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse = diff * lightColor;
+
+        // Especular
+        float specularStrength = 0.5;
+        vec3 viewDir = normalize(viewPos - FragPos);
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+        vec3 specular = specularStrength * spec * lightColor;
+
+        vec3 result = (ambient + diffuse + specular) * texColor;
+        FragColor = vec4(result, 1.0);
+    }
+)";
+//const char* floorVertexShader = "#version 330 core\n"
+//    "layout (location = 0) in vec3 aPos;\n"
+//    "layout (location = 1) in vec2 aTexCoord;\n"
+//    "out vec2 TexCoord;\n"
+//    "uniform mat4 model;\n"
+//    "uniform mat4 view;\n"
+//    "uniform mat4 projection;\n"
+//    "void main()\n"
+//    "{\n"
+//    "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
+//    "	TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
+//    "}\n";
+
+const char* floorVertexShader = R"(
+    #version 330 core
+    layout (location = 0) in vec3 aPos;
+    layout (location = 1) in vec3 aNormal;
+    layout (location = 2) in vec2 aTexCoord;
+
+    out vec3 FragPos;
+    out vec3 Normal;
+    out vec2 TexCoord;
+
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 projection;
+
+    void main()
+    {
+        FragPos = vec3(model * vec4(aPos, 1.0));
+        Normal = mat3(transpose(inverse(model))) * aNormal;
+        TexCoord = aTexCoord;
+
+        gl_Position = projection * view * vec4(FragPos, 1.0);
+    }
+)";
+
+//const char* carFragmentShader = "#version 330 core\n"
+//    "out vec4 FragColor;\n"
+//    "void main()\n"
+//    "{\n"
+//    "	FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+//    "}\n"
+//;
+
+//const char* carFragmentShader = R"(
+//    #version 330 core
+//    out vec4 FragColor;
+//
+//    in vec3 FragPos;
+//    in vec3 Normal;
+//
+//    uniform vec3 lightPos;
+//    uniform vec3 lightColor;
+//    uniform vec3 viewPos;
+//
+//    void main()
+//    {
+//        // Cor base do carro (vermelho)
+//        vec3 objectColor = vec3(1.0, 0.0, 0.0);
+//
+//        // Ambiente
+//        float ambientStrength = 0.1;
+//        vec3 ambient = ambientStrength * lightColor;
+//
+//        // Difuso
+//        vec3 norm = normalize(Normal);
+//        vec3 lightDir = normalize(lightPos - FragPos);
+//        float diff = max(dot(norm, lightDir), 0.0);
+//        vec3 diffuse = diff * lightColor;
+//
+//        // Especular
+//        float specularStrength = 0.5;
+//        vec3 viewDir = normalize(viewPos - FragPos);
+//        vec3 reflectDir = reflect(-lightDir, norm);
+//        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+//        vec3 specular = specularStrength * spec * lightColor;
+//
+//        vec3 result = (ambient + diffuse + specular) * objectColor;
+//        FragColor = vec4(result, 1.0);
+//    }
+//)";
+
+const char* carFragmentShader = R"(
+    #version 330 core
+    out vec4 FragColor;
+
+    in vec3 FragPos;
+    in vec3 Normal;
+
+    uniform vec3 lightPos;
+    uniform vec3 lightColor;
+    uniform vec3 viewPos;
+
+    void main()
+    {
+        // Cor base do carro (vermelho)
+        vec3 objectColor = vec3(1.0, 0.0, 0.0);
+
+        // Ambiente
+        float ambientStrength = 0.1;
+        vec3 ambient = ambientStrength * lightColor;
+
+        // Difuso
+        vec3 norm = normalize(Normal);
+        vec3 lightDir = normalize(lightPos - FragPos);
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse = diff * lightColor;
+
+        // Especular
+        float specularStrength = 0.5;
+        vec3 viewDir = normalize(viewPos - FragPos);
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+        vec3 specular = specularStrength * spec * lightColor;
+
+        vec3 result = (ambient + diffuse + specular) * objectColor;
+        FragColor = vec4(result, 1.0);
+    }
+)";
+
+//const char* carVertexShader = "#version 330 core\n"
+//    "layout (location = 0) in vec3 aPos;\n"
+//    "uniform mat4 model;\n"
+//    "uniform mat4 view;\n"
+//    "uniform mat4 projection;\n"
+//    "void main()\n"
+//    "{\n"
+//    "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
+//    "}\n"
+//;
+
+const char* carVertexShader = R"(
+    #version 330 core
+    layout (location = 0) in vec3 aPos;
+    layout (location = 1) in vec3 aNormal;
+
+    out vec3 FragPos;
+    out vec3 Normal;
+
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 projection;
+
+    void main()
+    {
+        FragPos = vec3(model * vec4(aPos, 1.0));
+        Normal = mat3(transpose(inverse(model))) * aNormal;
+
+        gl_Position = projection * view * vec4(FragPos, 1.0);
+    }
+)";
+
+//const char* lampFragmentShader = "#version 330 core\n"
+//    "out vec4 FragColor;\n"
+//    "void main()\n"
+//    "{\n"
+//    "    FragColor = vec4(0.5, 0.5, 0.5, 1.0);\n"
+//    "}\n"
+//;
+
+const char* lampFragmentShader = R"(
+    #version 330 core
+    out vec4 FragColor;
+
+    uniform vec3 lightColor;
+
+    void main()
+    {
+        FragColor = vec4(lightColor, 1.0);
+    }
+)";
+
+const char* lampVertexShader = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec2 aTexCoord;\n"
-    "out vec2 TexCoord;\n"
     "uniform mat4 model;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n"
     "void main()\n"
     "{\n"
     "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
-    "	TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
-    "}\n";
-
-const char* carFragmentShader = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "	FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
     "}\n"
 ;
-
-const char* carVertexShader = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "uniform mat4 model;\n"
-    "uniform mat4 view;\n"
-    "uniform mat4 projection;\n"
-    "void main()\n"
-    "{\n"
-    "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
-    "}\n"
-;
-
 
 int main()
 {
@@ -156,6 +383,7 @@ int main()
     // ------------------------------------
     GLuint floorShaderProgram = compileShader(floorVertexShader, floorFragmentShader);
     GLuint carShaderProgram = compileShader(carVertexShader, carFragmentShader);
+    GLuint lampShaderProgram = compileShader(lampVertexShader, lampFragmentShader);
 
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
@@ -304,9 +532,175 @@ int main()
         0.5f, -0.2f, 1.0f,
     };
 
-    unsigned int VBOs[2], VAOs[2];
-    glGenVertexArrays(2, VAOs);
-    glGenBuffers(2, VBOs);
+    float lamp_vertices[] = {
+
+//        -2.0f, -2.0f, -2.0f,
+//        -2.0f, -1.0f, -2.0f,
+//        -1.5f, -2.0f, -2.0f,
+//
+//        -2.0f, -2.0f, -2.0f,
+//        -2.0f, -1.0f, -2.0f,
+//        -1.5f, -1.0f, -2.0f,
+
+//        -2.0f, -1.0f, -2.0f,
+//        -2.0f, 0.0f, -2.0f,
+//        -1.5f, -1.0f, -2.0f,
+//
+//        -1.5f, -1.0f, -2.0f,
+//        -2.0f, 0.0f, -2.0f,
+//        -1.5f, 0.0f, -2.0f,
+//
+//        -2.0f, 0.0f, -2.0f,
+//        -1.5f, 1.0f, -2.0f,
+//        -1.5f, 0.0f, -2.0f,
+//
+//        -2.0f, 0.0f, -2.0f,
+//        -2.0f, 1.0f, -2.0f,
+//        -1.5f, 1.0f, -2.0f,
+
+        //poste
+        -1.0f, 0.0f, -1.0f,
+        -1.0f, 1.7f, -1.0f,
+        -0.7f, 0.0f, -1.0f,
+
+        -0.7f, 0.0f, -1.0f,
+        -1.0f, 1.7f, -1.0f,
+        -0.7f, 1.7f, -1.0f,
+
+        // curvatura
+        -1.0f, 1.7f, -1.0f,
+        -0.7f, 2.0f, -1.0f,
+        -0.7f, 1.7f, -1.0f,
+
+        -0.7f, 1.7f, -1.0f,
+        -0.7f, 2.0f, -1.0f,
+        0.0f, 1.7f, -1.0f,
+
+        -0.7f, 2.0f, -1.0f,
+        0.0f, 2.0f, -1.0f,
+        0.0f, 1.7f, -1.0f,
+
+        0.0f, 1.7f, -1.0f,
+        0.0f, 2.0f, -1.0f,
+        0.3f, 1.7f, -1.0f,
+
+        //lateral esquerda
+        -1.0f, 0.0f, -0.5f,
+        -1.0f, 1.7f, -0.5f,
+        -0.7f, 0.0f, -0.5f,
+
+        -0.7f, 0.0f, -0.5f,
+        -1.0f, 1.7f, -0.5f,
+        -0.7f, 1.7f, -0.5f,
+
+        -1.0f, 1.7f, -0.5f,
+        -0.7f, 2.0f, -0.5f,
+        -0.7f, 1.7f, -0.5f,
+
+        -0.7f, 1.7f, -0.5f,
+        -0.7f, 2.0f, -0.5f,
+        0.0f, 1.7f, -0.5f,
+
+        -0.7f, 2.0f, -0.5f,
+        0.0f, 2.0f, -0.5f,
+        0.0f, 1.7f, -0.5f,
+
+        0.0f, 1.7f, -0.5f,
+        0.0f, 2.0f, -0.5f,
+        0.3f, 1.7f, -0.5f,
+
+        //vista de cima
+
+        -1.0f, 1.7f, -1.0f,
+        -0.7f, 2.0f, -1.0f,
+        -0.7f, 1.7f, -1.0f,
+
+        -0.7f, 1.7f, -1.0f,
+        -0.7f, 2.0f, -1.0f,
+        0.0f, 1.7f, -1.0f,
+
+        -0.7f, 2.0f, -1.0f,
+        0.0f, 2.0f, -1.0f,
+        0.0f, 1.7f, -1.0f,
+
+        0.0f, 1.7f, -1.0f,
+        0.0f, 2.0f, -1.0f,
+        0.3f, 1.7f, -1.0f,
+
+        // Parte superior do poste
+        // Face frontal
+        -1.0f, 1.7f, -1.0f,
+        -1.0f, 1.7f, -0.5f,
+        -0.7f, 2.0f, -1.0f,
+
+        -0.7f, 2.0f, -1.0f,
+        -1.0f, 1.7f, -0.5f,
+        -0.7f, 2.0f, -0.5f,
+
+        // Face traseira
+        -0.7f, 2.0f, -1.0f,
+        -0.7f, 2.0f, -0.5f,
+        0.0f, 2.0f, -1.0f,
+
+        0.0f, 2.0f, -1.0f,
+        -0.7f, 2.0f, -0.5f,
+        0.0f, 2.0f, -0.5f,
+
+        // Face direita
+        0.0f, 2.0f, -1.0f,
+        0.0f, 2.0f, -0.5f,
+        0.3f, 1.7f, -1.0f,
+
+        0.3f, 1.7f, -1.0f,
+        0.0f, 2.0f, -0.5f,
+        0.3f, 1.7f, -0.5f,
+
+        // Parte inferior (fechando a base)
+        -1.0f, 0.0f, -1.0f,
+        -1.0f, 0.0f, -0.5f,
+        -0.7f, 0.0f, -1.0f,
+
+        -0.7f, 0.0f, -1.0f,
+        -1.0f, 0.0f, -0.5f,
+        -0.7f, 0.0f, -0.5f,
+
+        // Parte traseira do poste (fechando o comprimento)
+        // Face traseira principal
+        -1.0f, 0.0f, -1.0f,
+        -1.0f, 1.7f, -1.0f,
+        -1.0f, 0.0f, -0.5f,
+
+        -1.0f, 1.7f, -1.0f,
+        -1.0f, 1.7f, -0.5f,
+        -1.0f, 0.0f, -0.5f,
+
+        // Face traseira superior (curvatura)
+        -1.0f, 1.7f, -1.0f,
+        -1.0f, 1.7f, -0.5f,
+        -0.7f, 2.0f, -1.0f,
+
+        -0.7f, 2.0f, -1.0f,
+        -1.0f, 1.7f, -0.5f,
+        -0.7f, 2.0f, -0.5f,
+
+        // Face frontal (fechando a parte da frente)
+        0.3f, 1.7f, -1.0f,
+        0.3f, 1.7f, -0.5f,
+        -0.7f, 1.7f, -1.0f,
+
+        -0.7f, 0.0f, -1.0f,
+        -0.7f, 1.7f, -0.5f,
+        -0.7f, 0.0f, -0.5f,
+
+
+
+
+
+    };
+
+    unsigned int VBOs[3], VAOs[3];
+    glGenVertexArrays(3, VAOs);
+    glGenBuffers(3, VBOs);
 
     // Floor
     glBindVertexArray(VAOs[0]);
@@ -323,6 +717,13 @@ int main()
     glBindVertexArray(VAOs[1]);
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(carVertices), carVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Lamp
+    glBindVertexArray(VAOs[2]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[2]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(lamp_vertices), lamp_vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -379,6 +780,8 @@ int main()
         // bind textures on corresponding texture units
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
+        glm::vec3 lightPos(1.6f, 0.5f, 0.0f); // Posição do poste
+        glm::vec3 lightColor(1.0f, 1.0f, 1.0f); // Cor da luz (branca)
 
         // activate shader
         glUseProgram(floorShaderProgram);
@@ -407,6 +810,11 @@ int main()
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        glUniform3fv(glGetUniformLocation(floorShaderProgram, "lightPos"), 1, glm::value_ptr(lightPos));
+        glUniform3fv(glGetUniformLocation(floorShaderProgram, "lightColor"), 1, glm::value_ptr(lightColor));
+        //glUniform3fv(glGetUniformLocation(floorShaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
+
+
 
 
         // Car
@@ -414,6 +822,9 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glUseProgram(carShaderProgram);
+        glUniform3fv(glGetUniformLocation(carShaderProgram, "lightPos"), 1, glm::value_ptr(lightPos));
+        glUniform3fv(glGetUniformLocation(carShaderProgram, "lightColor"), 1, glm::value_ptr(lightColor));
+        glUniform3fv(glGetUniformLocation(carShaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.2f));
@@ -426,6 +837,24 @@ int main()
         glBindVertexArray(VAOs[1]);
         glDrawArrays(GL_TRIANGLES, 0, 81);
 
+        // Lamp
+
+        //glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glUseProgram(lampShaderProgram);
+
+        glUniform3fv(glGetUniformLocation(lampShaderProgram, "lightColor"), 1, glm::value_ptr(lightColor));
+
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.5f));
+        model = glm::translate(model, glm::vec3(1.6f, -1.0f, 0.0f));
+        //model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(lampShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(glGetUniformLocation(lampShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(lampShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glBindVertexArray(VAOs[2]);
+        glDrawArrays(GL_TRIANGLES, 0, 90);
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -434,8 +863,8 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(2, VAOs);
-    glDeleteBuffers(2, VBOs);
+    glDeleteVertexArrays(3, VAOs);
+    glDeleteBuffers(3, VBOs);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -443,36 +872,36 @@ int main()
     return 0;
 }
 
-float velocityMultiplier = 2.5;
+float velocityMultiplier = 0.08;
 void animateCar(glm::mat4* model) {
     if (!animate) return;
     static int lap = 0;
 
     float clock = ((float) glfwGetTime()) - (14.2 * lap);
     if (clock < 2.2) {
-        carPosition.x -= 0.03 * multiplier;
+        carPosition.x -= 0.03 * velocityMultiplier;
     } else if (clock < 5.5) {
-        carPosition.z -= 0.02 * multiplier;
+        carPosition.z -= 0.02 * velocityMultiplier;
         float c = (clock - 2.2) * 6;
         float xVelocity = (-0.01*c*c+0.2*c-1)/33.33;
         if (c >= 10) {
             xVelocity *= -1;
         }
-        carPosition.x += xVelocity * multiplier;
+        carPosition.x += xVelocity * velocityMultiplier;
         carRotation = -180 * (clock-2.2)/(5.5-2.2);
     } else if (clock < 9.3) {
-        carPosition.x += 0.03 * multiplier;
+        carPosition.x += 0.03 * velocityMultiplier;
     } else if (clock < 12.6) {
-        carPosition.z += 0.02  * multiplier;
+        carPosition.z += 0.02  * velocityMultiplier;
         float c = (clock - 9.3) * 6;
         float xVelocity = (0.01*c*c-0.2*c+1)/33.33;
         if (c >= 10) {
             xVelocity *= -1;
         }
-        carPosition.x += xVelocity * multiplier;
+        carPosition.x += xVelocity * velocityMultiplier;
         carRotation = -180 - (180 * (clock-9.3)/(12.6-9.3));
     } else if (clock < 14.2) {
-        carPosition.x -= 0.03 * multiplier;
+        carPosition.x -= 0.03 * velocityMultiplier;
     } else {
         lap++;
     }
@@ -484,7 +913,7 @@ void animateCar(glm::mat4* model) {
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    const float cameraSpeed = 0.05f; // adjust accordingly
+    const float cameraSpeed = 0.01f; // adjust accordingly
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
