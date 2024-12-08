@@ -1,15 +1,17 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <C:\Users\55549\local\Documentos\UCS\computacao_grafica\race-circuit-open-gl\include\stb_image.h>
-#include <C:\glm\glm\glm.hpp>
-#include <C:\glm\glm\gtc\matrix_transform.hpp>
-#include <C:\glm\glm\gtc\type_ptr.hpp>
-#include <C:\Users\55549\local\Documentos\UCS\computacao_grafica\race-circuit-open-gl\include\Shader.h>
+#include <stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <Shader.h>
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 void animateCar(glm::mat4* model);
+glm::vec3 computeNormal(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2);
+void processVerticesWithNormals(const float* vertices, int numVertices, float* verticesWithNormals);
 
 glm::vec3 cameraPos   = glm::vec3(5.0f, 2.0f,  5.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -71,262 +73,60 @@ void checkProgramLinkStatus(GLuint program);
 void processInput(GLFWwindow *window, float *x, float *y, float *z);
 
 // Shaders (cada objeto terá um shader próprio)
-//const char* floorFragmentShader = "#version 330 core\n"
-//    "out vec4 FragColor;\n"
-//    "in vec2 TexCoord;\n"
-//    "uniform sampler2D texture1;\n"
-//    "void main()\n"
-//    "{\n"
-//    "	FragColor = texture(texture1, TexCoord);\n"
-//    "}\n"
-//;
+const char* floorFragmentShader = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "in vec2 TexCoord;\n"
+    "uniform sampler2D texture1;\n"
+    "void main()\n"
+    "{\n"
+    "	FragColor = texture(texture1, TexCoord);\n"
+    "}\n"
+;
 
-//const char* floorFragmentShader = R"(
-//    #version 330 core
-//    out vec4 FragColor;
-//
-//    in vec3 FragPos;
-//    in vec3 Normal;
-//    in vec2 TexCoord;
-//
-//    uniform sampler2D texture1;
-//    uniform vec3 lightPos;
-//    uniform vec3 lightColor;
-//    uniform vec3 viewPos;
-//
-//    void main()
-//    {
-//        // Ambiente
-//        float ambientStrength = 0.1;
-//        vec3 ambient = ambientStrength * lightColor;
-//
-//        // Difuso
-//        vec3 norm = normalize(Normal);
-//        vec3 lightDir = normalize(lightPos - FragPos);
-//        float diff = max(dot(norm, lightDir), 0.0);
-//        vec3 diffuse = diff * lightColor;
-//
-//        // Especular
-//        float specularStrength = 0.5;
-//        vec3 viewDir = normalize(viewPos - FragPos);
-//        vec3 reflectDir = reflect(-lightDir, norm);
-//        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-//        vec3 specular = specularStrength * spec * lightColor;
-//
-//        vec3 result = (ambient + diffuse + specular) * texture(texture1, TexCoord).rgb;
-//        FragColor = vec4(result, 1.0);
-//    }
-//)";
+const char* floorVertexShader = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec2 aTexCoord;\n"
+    "out vec2 TexCoord;\n"
+    "uniform mat4 model;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
+    "	TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
+    "}\n";
 
-const char* floorFragmentShader = R"(
-    #version 330 core
-    out vec4 FragColor;
+// Car
+const char* carFragmentShader = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "	FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+    "}\n"
+;
 
-    in vec3 FragPos;
-    in vec3 Normal;
-    in vec2 TexCoord;
+const char* carVertexShader = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec3 normal;\n"
+    "uniform mat4 model;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
+    "}\n"
+;
 
-    uniform sampler2D texture1;
-    uniform vec3 lightPos;
-    uniform vec3 lightColor;
-    uniform vec3 viewPos;
-
-    void main()
-    {
-        // Textura
-        vec3 texColor = texture(texture1, TexCoord).rgb;
-
-        // Ambiente
-        float ambientStrength = 0.1;
-        vec3 ambient = ambientStrength * lightColor;
-
-        // Difuso
-        vec3 norm = normalize(Normal);
-        vec3 lightDir = normalize(lightPos - FragPos);
-        float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = diff * lightColor;
-
-        // Especular
-        float specularStrength = 0.5;
-        vec3 viewDir = normalize(viewPos - FragPos);
-        vec3 reflectDir = reflect(-lightDir, norm);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-        vec3 specular = specularStrength * spec * lightColor;
-
-        vec3 result = (ambient + diffuse + specular) * texColor;
-        FragColor = vec4(result, 1.0);
-    }
-)";
-//const char* floorVertexShader = "#version 330 core\n"
-//    "layout (location = 0) in vec3 aPos;\n"
-//    "layout (location = 1) in vec2 aTexCoord;\n"
-//    "out vec2 TexCoord;\n"
-//    "uniform mat4 model;\n"
-//    "uniform mat4 view;\n"
-//    "uniform mat4 projection;\n"
-//    "void main()\n"
-//    "{\n"
-//    "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
-//    "	TexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
-//    "}\n";
-
-const char* floorVertexShader = R"(
-    #version 330 core
-    layout (location = 0) in vec3 aPos;
-    layout (location = 1) in vec3 aNormal;
-    layout (location = 2) in vec2 aTexCoord;
-
-    out vec3 FragPos;
-    out vec3 Normal;
-    out vec2 TexCoord;
-
-    uniform mat4 model;
-    uniform mat4 view;
-    uniform mat4 projection;
-
-    void main()
-    {
-        FragPos = vec3(model * vec4(aPos, 1.0));
-        Normal = mat3(transpose(inverse(model))) * aNormal;
-        TexCoord = aTexCoord;
-
-        gl_Position = projection * view * vec4(FragPos, 1.0);
-    }
-)";
-
-//const char* carFragmentShader = "#version 330 core\n"
-//    "out vec4 FragColor;\n"
-//    "void main()\n"
-//    "{\n"
-//    "	FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
-//    "}\n"
-//;
-
-//const char* carFragmentShader = R"(
-//    #version 330 core
-//    out vec4 FragColor;
-//
-//    in vec3 FragPos;
-//    in vec3 Normal;
-//
-//    uniform vec3 lightPos;
-//    uniform vec3 lightColor;
-//    uniform vec3 viewPos;
-//
-//    void main()
-//    {
-//        // Cor base do carro (vermelho)
-//        vec3 objectColor = vec3(1.0, 0.0, 0.0);
-//
-//        // Ambiente
-//        float ambientStrength = 0.1;
-//        vec3 ambient = ambientStrength * lightColor;
-//
-//        // Difuso
-//        vec3 norm = normalize(Normal);
-//        vec3 lightDir = normalize(lightPos - FragPos);
-//        float diff = max(dot(norm, lightDir), 0.0);
-//        vec3 diffuse = diff * lightColor;
-//
-//        // Especular
-//        float specularStrength = 0.5;
-//        vec3 viewDir = normalize(viewPos - FragPos);
-//        vec3 reflectDir = reflect(-lightDir, norm);
-//        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-//        vec3 specular = specularStrength * spec * lightColor;
-//
-//        vec3 result = (ambient + diffuse + specular) * objectColor;
-//        FragColor = vec4(result, 1.0);
-//    }
-//)";
-
-const char* carFragmentShader = R"(
-    #version 330 core
-    out vec4 FragColor;
-
-    in vec3 FragPos;
-    in vec3 Normal;
-
-    uniform vec3 lightPos;
-    uniform vec3 lightColor;
-    uniform vec3 viewPos;
-
-    void main()
-    {
-        // Cor base do carro (vermelho)
-        vec3 objectColor = vec3(1.0, 0.0, 0.0);
-
-        // Ambiente
-        float ambientStrength = 0.1;
-        vec3 ambient = ambientStrength * lightColor;
-
-        // Difuso
-        vec3 norm = normalize(Normal);
-        vec3 lightDir = normalize(lightPos - FragPos);
-        float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = diff * lightColor;
-
-        // Especular
-        float specularStrength = 0.5;
-        vec3 viewDir = normalize(viewPos - FragPos);
-        vec3 reflectDir = reflect(-lightDir, norm);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-        vec3 specular = specularStrength * spec * lightColor;
-
-        vec3 result = (ambient + diffuse + specular) * objectColor;
-        FragColor = vec4(result, 1.0);
-    }
-)";
-
-//const char* carVertexShader = "#version 330 core\n"
-//    "layout (location = 0) in vec3 aPos;\n"
-//    "uniform mat4 model;\n"
-//    "uniform mat4 view;\n"
-//    "uniform mat4 projection;\n"
-//    "void main()\n"
-//    "{\n"
-//    "	gl_Position = projection * view * model * vec4(aPos, 1.0f);\n"
-//    "}\n"
-//;
-
-const char* carVertexShader = R"(
-    #version 330 core
-    layout (location = 0) in vec3 aPos;
-    layout (location = 1) in vec3 aNormal;
-
-    out vec3 FragPos;
-    out vec3 Normal;
-
-    uniform mat4 model;
-    uniform mat4 view;
-    uniform mat4 projection;
-
-    void main()
-    {
-        FragPos = vec3(model * vec4(aPos, 1.0));
-        Normal = mat3(transpose(inverse(model))) * aNormal;
-
-        gl_Position = projection * view * vec4(FragPos, 1.0);
-    }
-)";
-
-//const char* lampFragmentShader = "#version 330 core\n"
-//    "out vec4 FragColor;\n"
-//    "void main()\n"
-//    "{\n"
-//    "    FragColor = vec4(0.5, 0.5, 0.5, 1.0);\n"
-//    "}\n"
-//;
-
+// Lamp
 const char* lampFragmentShader = R"(
     #version 330 core
     out vec4 FragColor;
 
-    uniform vec3 lightColor;
+    uniform vec3 lampColor;
 
     void main()
     {
-        FragColor = vec4(lightColor, 1.0);
+        FragColor = vec4(lampColor, 1.0);
     }
 )";
 
@@ -386,19 +186,24 @@ int main()
     GLuint lampShaderProgram = compileShader(lampVertexShader, lampFragmentShader);
 
 
+
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float vertices[] = {
-        -1.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+        // Triangle 1
+        -1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f,
+        -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f,
+        1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f,
 
-        -1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-        1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
-        1.0f, 0.0f, -1.0f, 0.0f, 0.0f,
+        // Triangle 2
+        -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f
     };
 
-   float carVertices[] = {
+    int carVerticesLength = 234;
+    float carVertices[234 * 2];
+   float carVerticesWithoutNormal[] = {
         // body triangle 1 front
         -1.0f, -1.0f, 1.0f,
         -1.0f, -0.2f, 1.0f,
@@ -532,32 +337,9 @@ int main()
         0.5f, -0.2f, 1.0f,
     };
 
-    float lamp_vertices[] = {
-
-//        -2.0f, -2.0f, -2.0f,
-//        -2.0f, -1.0f, -2.0f,
-//        -1.5f, -2.0f, -2.0f,
-//
-//        -2.0f, -2.0f, -2.0f,
-//        -2.0f, -1.0f, -2.0f,
-//        -1.5f, -1.0f, -2.0f,
-
-//        -2.0f, -1.0f, -2.0f,
-//        -2.0f, 0.0f, -2.0f,
-//        -1.5f, -1.0f, -2.0f,
-//
-//        -1.5f, -1.0f, -2.0f,
-//        -2.0f, 0.0f, -2.0f,
-//        -1.5f, 0.0f, -2.0f,
-//
-//        -2.0f, 0.0f, -2.0f,
-//        -1.5f, 1.0f, -2.0f,
-//        -1.5f, 0.0f, -2.0f,
-//
-//        -2.0f, 0.0f, -2.0f,
-//        -2.0f, 1.0f, -2.0f,
-//        -1.5f, 1.0f, -2.0f,
-
+    int lampVerticesLength = 270;
+    float lampVertices[270 * 2];
+     float lampVerticesWithoutNormal[] = {
         //poste
         -1.0f, 0.0f, -1.0f,
         -1.0f, 1.7f, -1.0f,
@@ -691,12 +473,10 @@ int main()
         -0.7f, 0.0f, -1.0f,
         -0.7f, 1.7f, -0.5f,
         -0.7f, 0.0f, -0.5f,
-
-
-
-
-
     };
+
+    processVerticesWithNormals(carVerticesWithoutNormal, 234, carVertices);
+    processVerticesWithNormals(lampVerticesWithoutNormal, 270, lampVertices);
 
     unsigned int VBOs[3], VAOs[3];
     glGenVertexArrays(3, VAOs);
@@ -707,26 +487,31 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     // Car
     glBindVertexArray(VAOs[1]);
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(carVertices), carVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // Lamp
     glBindVertexArray(VAOs[2]);
     glBindBuffer(GL_ARRAY_BUFFER, VBOs[2]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(lamp_vertices), lamp_vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(lampVertices), lampVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // load and create a texture
     // -------------------------
@@ -780,8 +565,6 @@ int main()
         // bind textures on corresponding texture units
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
-        glm::vec3 lightPos(1.6f, 0.5f, 0.0f); // Posição do poste
-        glm::vec3 lightColor(1.0f, 1.0f, 1.0f); // Cor da luz (branca)
 
         // activate shader
         glUseProgram(floorShaderProgram);
@@ -810,11 +593,6 @@ int main()
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
         glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniform3fv(glGetUniformLocation(floorShaderProgram, "lightPos"), 1, glm::value_ptr(lightPos));
-        glUniform3fv(glGetUniformLocation(floorShaderProgram, "lightColor"), 1, glm::value_ptr(lightColor));
-        //glUniform3fv(glGetUniformLocation(floorShaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
-
-
 
 
         // Car
@@ -822,9 +600,6 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glUseProgram(carShaderProgram);
-        glUniform3fv(glGetUniformLocation(carShaderProgram, "lightPos"), 1, glm::value_ptr(lightPos));
-        glUniform3fv(glGetUniformLocation(carShaderProgram, "lightColor"), 1, glm::value_ptr(lightColor));
-        glUniform3fv(glGetUniformLocation(carShaderProgram, "viewPos"), 1, glm::value_ptr(cameraPos));
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.2f));
@@ -838,12 +613,11 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 81);
 
         // Lamp
-
-        //glDrawArrays(GL_TRIANGLES, 0, 6);
-
+        glm::vec3 lightPos(1.6f, 0.5f, 0.0f); // Lamp position
+        glm::vec3 lampColor(0.4196f, 0.1255f, 0.0667f); // Light color (Brown-ish)
         glUseProgram(lampShaderProgram);
 
-        glUniform3fv(glGetUniformLocation(lampShaderProgram, "lightColor"), 1, glm::value_ptr(lightColor));
+        glUniform3fv(glGetUniformLocation(lampShaderProgram, "lampColor"), 1, glm::value_ptr(lampColor));
 
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.5f));
@@ -863,8 +637,8 @@ int main()
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
-    glDeleteVertexArrays(3, VAOs);
-    glDeleteBuffers(3, VBOs);
+    glDeleteVertexArrays(2, VAOs);
+    glDeleteBuffers(2, VBOs);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -872,7 +646,7 @@ int main()
     return 0;
 }
 
-float velocityMultiplier = 0.08;
+float velocityMultiplier = 1;
 void animateCar(glm::mat4* model) {
     if (!animate) return;
     static int lap = 0;
@@ -913,7 +687,7 @@ void animateCar(glm::mat4* model) {
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    const float cameraSpeed = 0.01f; // adjust accordingly
+    const float cameraSpeed = 0.05f; // adjust accordingly
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -1002,4 +776,44 @@ void checkProgramLinkStatus(GLuint program) {
     }
 }
 
+// Function to compute the normal of a triangle given its three vertices
+glm::vec3 computeNormal(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2) {
+    glm::vec3 edge1 = v1 - v0;
+    glm::vec3 edge2 = v2 - v0;
+    glm::vec3 normal = glm::cross(edge1, edge2); // Cross product of two edges
+    return glm::normalize(normal);               // Normalize the result to unit length
+}
 
+void processVerticesWithNormals(const float* vertices, int numVertices, float* verticesWithNormals) {
+    const int numTriangles = numVertices / 3;
+
+    for (int i = 0; i < numTriangles; ++i) {
+        // Get indices for the three vertices of the current triangle
+        int idx0 = i * 9;
+        int idx1 = idx0 + 3;
+        int idx2 = idx0 + 6;
+
+        // Create glm::vec3 for each vertex
+        glm::vec3 v0(vertices[idx0], vertices[idx0 + 1], vertices[idx0 + 2]);
+        glm::vec3 v1(vertices[idx1], vertices[idx1 + 1], vertices[idx1 + 2]);
+        glm::vec3 v2(vertices[idx2], vertices[idx2 + 1], vertices[idx2 + 2]);
+
+        // Compute the normal for the current triangle
+        glm::vec3 normal = computeNormal(v0, v1, v2);
+
+        // Function to copy a vertex and its normal to the output array
+        auto addVertexWithNormal = [&](int vertexIndex, int outputIndex) {
+            verticesWithNormals[outputIndex]     = vertices[vertexIndex];
+            verticesWithNormals[outputIndex + 1] = vertices[vertexIndex + 1];
+            verticesWithNormals[outputIndex + 2] = vertices[vertexIndex + 2];
+            verticesWithNormals[outputIndex + 3] = normal.x;
+            verticesWithNormals[outputIndex + 4] = normal.y;
+            verticesWithNormals[outputIndex + 5] = normal.z;
+        };
+
+        // Add the vertices and their normals to the output array
+        addVertexWithNormal(idx0, i * 18);
+        addVertexWithNormal(idx1, i * 18 + 6);
+        addVertexWithNormal(idx2, i * 18 + 12);
+    }
+}
