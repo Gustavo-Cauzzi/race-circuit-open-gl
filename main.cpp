@@ -13,7 +13,6 @@ void processInput(GLFWwindow *window);
 void animateCar(glm::mat4* model);
 glm::vec3 computeNormal(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2);
 void processVerticesWithNormals(const float* vertices, int numVertices, float* verticesWithNormals);
-glm::vec3 carControlledPosition = glm::vec3(0.0f);
 
 glm::vec3 cameraPos   = glm::vec3(5.0f, 2.0f,  5.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -599,7 +598,10 @@ int main()
         model = glm::scale(model, glm::vec3(0.2f));
         model = glm::translate(model, glm::vec3(3.5f, -2.5f, 0.0f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::translate(model, carControlledPosition);
+
+        model = glm::translate(model, carPosition);
+        model = glm::rotate(model, glm::radians(carRotation), glm::vec3(0.0f, 0.1f, 0.0f));
+
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -640,35 +642,40 @@ int main()
     return 0;
 }
 
-float velocityMultiplier = 1;
+float carVelocity = 0.1;
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    const float cameraSpeed = 0.05f; // adjust accordingly
+    const float steeringSpeed = 15.0f;
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        cameraPos += glm::vec3(0.0f, 1.0f, 0.0f) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-        cameraPos += glm::vec3(0.0f, -1.0f, 0.0f) * cameraSpeed;
+    glm::vec3 velVec = glm::vec3(0.0f, 0.0f, 0.0f);
 
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        zoomControl(1.0f);
-    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
-        zoomControl(-1.0f);
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        reset();
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        velVec = glm::vec3(-carVelocity, 0.0f, 0.0f);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS){
+        velVec = glm::vec3(carVelocity, 0.0f, 0.0f);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        carRotation += steeringSpeed * 0.1f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        carRotation -= steeringSpeed * 0.1f;
+    }
+
+    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(carRotation), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec3 forwardVec = glm::vec3(rotation * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));
+
+    carPosition += forwardVec * velVec.x;
+
+    // Restrict movement within boundaries
+    carPosition.x = glm::clamp(carPosition.x, -20.0f, 20.0f);
+    carPosition.z = glm::clamp(carPosition.z, -13.0f, 6.0f);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
