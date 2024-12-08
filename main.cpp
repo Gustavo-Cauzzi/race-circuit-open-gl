@@ -6,12 +6,14 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <Shader.h>
 #include <iostream>
+#include <fstream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 void animateCar(glm::mat4* model);
 glm::vec3 computeNormal(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2);
 void processVerticesWithNormals(const float* vertices, int numVertices, float* verticesWithNormals);
+glm::vec3 carControlledPosition = glm::vec3(0.0f);
 
 glm::vec3 cameraPos   = glm::vec3(5.0f, 2.0f,  5.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -201,282 +203,274 @@ int main()
         1.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f
     };
 
-    int carVerticesLength = 234;
-    float carVertices[234 * 2];
-   float carVerticesWithoutNormal[] = {
+    float carVertices[] = {
         // body triangle 1 front
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, -0.2f, 1.0f,
-        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f,
+        -1.0f, -0.2f, 1.0f, 0.0f, 0.0f, -1.0f,
+        1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f,
 
         // body triangle 2 front
-        -1.0f, -0.2f, 1.0f,
-        1.0f, -0.2f, 1.0f,
-        1.0f, -1.0f, 1.0f,
+        -1.0f, -0.2f, 1.0f, 0.0f, 0.0f, -1.0f,
+        1.0f, -0.2f, 1.0f, 0.0f, 0.0f, -1.0f,
+        1.0f, -1.0f, 1.0f, 0.0f, 0.0f, -1.0f,
 
         // window triangle 1 front
-        -0.7f, -0.2f, 1.0f,
-        -0.7f, 0.75f, 1.0f,
-        0.5f, -0.2f, 1.0f,
+        -0.7f, -0.2f, 1.0f, 0.0f, 0.0f, -1.0f,
+        -0.7f, 0.75f, 1.0f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.2f, 1.0f, 0.0f, 0.0f, -1.0f,
 
         // window triangle 2 front
-        -0.7f, 0.75f, 1.0f,
-        0.5f, 0.75f, 1.0f,
-        0.5f, -0.2f, 1.0f,
+        -0.7f, 0.75f, 1.0f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.75f, 1.0f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.2f, 1.0f, 0.0f, 0.0f, -1.0f,
 
         // Upper part
         // body triangle 1 upper
-        -1.0f, -0.2f, 1.0f,
-        -1.0f, -0.2f, -1.0f,
-        -0.7f, -0.2f, -1.0f,
+        -1.0f, -0.2f, 1.0f, 0.0f, -1.0f, 0.0f,
+        -1.0f, -0.2f, -1.0f, 0.0f, -1.0f, 0.0f,
+        -0.7f, -0.2f, -1.0f, 0.0f, -1.0f, 0.0f,
 
         // body triangle 2 upper
-        -1.0f, -0.2f, 1.0f,
-        -0.7f, -0.2f, -1.0f,
-        -0.7f, -0.2f, 1.0f,
+        -1.0f, -0.2f, 1.0f, 0.0f, -1.0f, 0.0f,
+        -0.7f, -0.2f, -1.0f, 0.0f, -1.0f, 0.0f,
+        -0.7f, -0.2f, 1.0f, 0.0f, -1.0f, 0.0f,
 
         // ceiling triangle 1 upper
-        -0.7f, 0.75f, 1.0f,
-        -0.7f, 0.75f, -1.0f,
-        0.5f, 0.75f, -1.0f,
+        -0.7f, 0.75f, 1.0f, 0.0f, -1.0f, 0.0f,
+        -0.7f, 0.75f, -1.0f, 0.0f, -1.0f, 0.0f,
+        0.5f, 0.75f, -1.0f, 0.0f, -1.0f, 0.0f,
 
         // ceiling triangle 2 upper
-        -0.7f, 0.75f, 1.0f,
-        0.5f, 0.75f, -1.0f,
-        0.5f, 0.75f, 1.0f,
+        -0.7f, 0.75f, 1.0f, 0.0f, -1.0f, 0.0f,
+        0.5f, 0.75f, -1.0f, 0.0f, -1.0f, 0.0f,
+        0.5f, 0.75f, 1.0f, 0.0f, -1.0f, 0.0f,
 
         // front triangle 1 upper
-        0.5f, -0.2f, 1.0f,
-        0.5f, -0.2f, -1.0f,
-        1.0f, -0.2f, -1.0f,
+        0.5f, -0.2f, 1.0f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.2f, -1.0f, 0.0f, -1.0f, 0.0f,
+        1.0f, -0.2f, -1.0f, 0.0f, -1.0f, 0.0f,
 
         // front triangle 2 upper
-        0.5f, -0.2f, 1.0f,
-        1.0f, -0.2f, -1.0f,
-        1.0f, -0.2f, 1.0f,
+        0.5f, -0.2f, 1.0f, 0.0f, -1.0f, 0.0f,
+        1.0f, -0.2f, -1.0f, 0.0f, -1.0f, 0.0f,
+        1.0f, -0.2f, 1.0f, 0.0f, -1.0f, 0.0f,
 
         // Front
         // bottom triangle 1 front
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,
-        -1.0f, -0.2f, -1.0f,
+        -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f,
+        -1.0f, -0.2f, -1.0f, 1.0f, 0.0f, 0.0f,
 
         // bottom triangle 2 front
-        -1.0f, -0.2f, -1.0f,
-        -1.0f, -0.2f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
+        -1.0f, -0.2f, -1.0f, 1.0f, 0.0f, -0.0f,
+        -1.0f, -0.2f, 1.0f, 1.0f, 0.0f, -0.0f,
+        -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, -0.0f,
 
         // upper triangle 1 front
-        -0.7f, -0.2f, -1.0f,
-        -0.7f, 0.75f, -1.0f,
-        -0.7f, -0.2f, 1.0f,
+        -0.7f, -0.2f, -1.0f, 1.0f, 0.0f, 0.0f,
+        -0.7f, 0.75f, -1.0f, 1.0f, 0.0f, 0.0f,
+        -0.7f, -0.2f, 1.0f, 1.0f, 0.0f, 0.0f,
 
         // upper triangle 2 front
-        -0.7f, 0.75f, -1.0f,
-        -0.7f, 0.75f, 1.0f,
-        -0.7f, -0.2f, 1.0f,
+        -0.7f, 0.75f, -1.0f, 1.0f, 0.0f, -0.0f,
+        -0.7f, 0.75f, 1.0f, 1.0f, 0.0f, -0.0f,
+        -0.7f, -0.2f, 1.0f, 1.0f, 0.0f, -0.0f,
 
         // Back triangle 1
-        1.0f, -1.0f, -1.0f,
-        1.0f, -0.2f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f, 0.0f, -0.0f, 1.0f,
+        1.0f, -0.2f, -1.0f, 0.0f, -0.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f, 0.0f, -0.0f, 1.0f,
 
         // Back triangle 2
-        1.0f, -0.2f, -1.0f,
-        -1.0f, -0.2f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
+        1.0f, -0.2f, -1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -0.2f, -1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f,
 
         // Bottom triangle 1
-        -1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f,
 
         // Bottom triangle 2
-        -1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, 1.0f,
-        -1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+        1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f,
+        -1.0f, -1.0f, 1.0f, 0.0f, -1.0f, 0.0f,
 
         // Right side triangle 1
-        1.0f, -1.0f, 1.0f,
-        1.0f, -0.2f, 1.0f,
-        1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f,
+        1.0f, -0.2f, 1.0f, -1.0f, 0.0f, 0.0f,
+        1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
 
         // Right side triangle 2
-        1.0f, -0.2f, 1.0f,
-        1.0f, -0.2f, -1.0f,
-        1.0f, -1.0f, -1.0f,
+        1.0f, -0.2f, 1.0f, -1.0f, 0.0f, -0.0f,
+        1.0f, -0.2f, -1.0f, -1.0f, 0.0f, -0.0f,
+        1.0f, -1.0f, -1.0f, -1.0f, 0.0f, -0.0f,
 
         // Left side triangle 1
-        -1.0f, -1.0f, 1.0f,
-        -1.0f, -0.2f, 1.0f,
-        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f,
+        -1.0f, -0.2f, 1.0f, -1.0f, 0.0f, 0.0f,
+        -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f,
 
         // Left side triangle 2
-        -1.0f, -0.2f, 1.0f,
-        -1.0f, -0.2f, -1.0f,
-        -1.0f, -1.0f, -1.0f,
+        -1.0f, -0.2f, 1.0f, -1.0f, 0.0f, -0.0f,
+        -1.0f, -0.2f, -1.0f, -1.0f, 0.0f, -0.0f,
+        -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, -0.0f,
 
         // Rear window triangle 1
-        -0.7f, -0.2f, -1.0f,
-        -0.7f, 0.75f, -1.0f,
-        0.5f, -0.2f, -1.0f,
+        -0.7f, -0.2f, -1.0f, 0.0f, 0.0f, -1.0f,
+        -0.7f, 0.75f, -1.0f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.2f, -1.0f, 0.0f, 0.0f, -1.0f,
 
         // Rear window triangle 2
-        -0.7f, 0.75f, -1.0f,
-        0.5f, 0.75f, -1.0f,
-        0.5f, -0.2f, -1.0f,
+        -0.7f, 0.75f, -1.0f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.75f, -1.0f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.2f, -1.0f, 0.0f, 0.0f, -1.0f,
 
         // upper triangle 1 front
-        0.5f, -0.2f, -1.0f,
-        0.5f, 0.75f, -1.0f,
-        0.5f, -0.2f, 1.0f,
+        0.5f, -0.2f, -1.0f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.75f, -1.0f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.2f, 1.0f, 1.0f, 0.0f, 0.0f,
 
         // upper triangle 2 front
-        0.5f, 0.75f, -1.0f,
-        0.5f, 0.75f, 1.0f,
-        0.5f, -0.2f, 1.0f,
+        0.5f, 0.75f, -1.0f, 1.0f, 0.0f, -0.0f,
+        0.5f, 0.75f, 1.0f, 1.0f, 0.0f, -0.0f,
+        0.5f, -0.2f, 1.0f, 1.0f, 0.0f, -0.0f,
     };
 
-    int lampVerticesLength = 270;
-    float lampVertices[270 * 2];
-     float lampVerticesWithoutNormal[] = {
+    float lampVertices[] = {
         //poste
-        -1.0f, 0.0f, -1.0f,
-        -1.0f, 1.7f, -1.0f,
-        -0.7f, 0.0f, -1.0f,
+        -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 
-        -0.7f, 0.0f, -1.0f,
-        -1.0f, 1.7f, -1.0f,
-        -0.7f, 1.7f, -1.0f,
+        -0.7f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
 
         // curvatura
-        -1.0f, 1.7f, -1.0f,
-        -0.7f, 2.0f, -1.0f,
-        -0.7f, 1.7f, -1.0f,
+        -1.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
 
-        -0.7f, 1.7f, -1.0f,
-        -0.7f, 2.0f, -1.0f,
-        0.0f, 1.7f, -1.0f,
+        -0.7f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
 
-        -0.7f, 2.0f, -1.0f,
-        0.0f, 2.0f, -1.0f,
-        0.0f, 1.7f, -1.0f,
+        -0.7f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
 
-        0.0f, 1.7f, -1.0f,
-        0.0f, 2.0f, -1.0f,
-        0.3f, 1.7f, -1.0f,
+        0.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.3f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
 
         //lateral esquerda
-        -1.0f, 0.0f, -0.5f,
-        -1.0f, 1.7f, -0.5f,
-        -0.7f, 0.0f, -0.5f,
+        -1.0f, 0.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+        -1.0f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 0.0f, -0.5f, 0.0f, 0.0f, 1.0f,
 
-        -0.7f, 0.0f, -0.5f,
-        -1.0f, 1.7f, -0.5f,
-        -0.7f, 1.7f, -0.5f,
+        -0.7f, 0.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+        -1.0f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
 
-        -1.0f, 1.7f, -0.5f,
-        -0.7f, 2.0f, -0.5f,
-        -0.7f, 1.7f, -0.5f,
+        -1.0f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 2.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
 
-        -0.7f, 1.7f, -0.5f,
-        -0.7f, 2.0f, -0.5f,
-        0.0f, 1.7f, -0.5f,
+        -0.7f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 2.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+        0.0f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
 
-        -0.7f, 2.0f, -0.5f,
-        0.0f, 2.0f, -0.5f,
-        0.0f, 1.7f, -0.5f,
+        -0.7f, 2.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+        0.0f, 2.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+        0.0f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
 
-        0.0f, 1.7f, -0.5f,
-        0.0f, 2.0f, -0.5f,
-        0.3f, 1.7f, -0.5f,
+        0.0f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
+        0.0f, 2.0f, -0.5f, 0.0f, 0.0f, 1.0f,
+        0.3f, 1.7f, -0.5f, 0.0f, 0.0f, 1.0f,
 
         //vista de cima
+        -1.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
 
-        -1.0f, 1.7f, -1.0f,
-        -0.7f, 2.0f, -1.0f,
-        -0.7f, 1.7f, -1.0f,
+        -0.7f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -0.7f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
 
-        -0.7f, 1.7f, -1.0f,
-        -0.7f, 2.0f, -1.0f,
-        0.0f, 1.7f, -1.0f,
+        -0.7f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
 
-        -0.7f, 2.0f, -1.0f,
-        0.0f, 2.0f, -1.0f,
-        0.0f, 1.7f, -1.0f,
-
-        0.0f, 1.7f, -1.0f,
-        0.0f, 2.0f, -1.0f,
-        0.3f, 1.7f, -1.0f,
+        0.0f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 2.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.3f, 1.7f, 1.0f, 0.0f, 0.0f, 1.0f,
 
         // Parte superior do poste
         // Face frontal
-        -1.0f, 1.7f, -1.0f,
-        -1.0f, 1.7f, -0.5f,
-        -0.7f, 2.0f, -1.0f,
+        -1.0f, 1.7f, 1.0f, -0.707107f, 0.707107f, 0.0f,
+        -1.0f, 1.7f, -0.5f, -0.707107f, 0.707107f, 0.0f,
+        -0.7f, 2.0f, 1.0f, -0.707107f, 0.707107f, 0.0f,
 
-        -0.7f, 2.0f, -1.0f,
-        -1.0f, 1.7f, -0.5f,
-        -0.7f, 2.0f, -0.5f,
+        -0.7f, 2.0f, 1.0f, -0.707107f, 0.707107f, 0.0f,
+        -1.0f, 1.7f, -0.5f, -0.707107f, 0.707107f, 0.0f,
+        -0.7f, 2.0f, -0.5f, -0.707107f, 0.707107f, 0.0f,
 
         // Face traseira
-        -0.7f, 2.0f, -1.0f,
-        -0.7f, 2.0f, -0.5f,
-        0.0f, 2.0f, -1.0f,
+        -0.7f, 2.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -0.7f, 2.0f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.0f, 2.0f, 1.0f, 0.0f, 1.0f, 0.0f,
 
-        0.0f, 2.0f, -1.0f,
-        -0.7f, 2.0f, -0.5f,
-        0.0f, 2.0f, -0.5f,
+        0.0f, 2.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -0.7f, 2.0f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.0f, 2.0f, -0.5f, 0.0f, 1.0f, 0.0f,
 
         // Face direita
-        0.0f, 2.0f, -1.0f,
-        0.0f, 2.0f, -0.5f,
-        0.3f, 1.7f, -1.0f,
+        0.0f, 2.0f, 1.0f, 0.707107f, 0.707107f, 0.0f,
+        0.0f, 2.0f, -0.5f, 0.707107f, 0.707107f, 0.0f,
+        0.3f, 1.7f, 1.0f, 0.707107f, 0.707107f, 0.0f,
 
-        0.3f, 1.7f, -1.0f,
-        0.0f, 2.0f, -0.5f,
-        0.3f, 1.7f, -0.5f,
+        0.3f, 1.7f, 1.0f, 0.707107f, 0.707107f, 0.0f,
+        0.0f, 2.0f, -0.5f, 0.707107f, 0.707107f, 0.0f,
+        0.3f, 1.7f, -0.5f, 0.707107f, 0.707107f, 0.0f,
 
         // Parte inferior (fechando a base)
-        -1.0f, 0.0f, -1.0f,
-        -1.0f, 0.0f, -0.5f,
-        -0.7f, 0.0f, -1.0f,
+        -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -1.0f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,
+        -0.7f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
 
-        -0.7f, 0.0f, -1.0f,
-        -1.0f, 0.0f, -0.5f,
-        -0.7f, 0.0f, -0.5f,
+        -0.7f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -1.0f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,
+        -0.7f, 0.0f, -0.5f, 0.0f, 1.0f, 0.0f,
 
         // Parte traseira do poste (fechando o comprimento)
         // Face traseira principal
-        -1.0f, 0.0f, -1.0f,
-        -1.0f, 1.7f, -1.0f,
-        -1.0f, 0.0f, -0.5f,
+        -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -1.0f, 1.7f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, -0.5f, 1.0f, 0.0f, 0.0f,
 
-        -1.0f, 1.7f, -1.0f,
-        -1.0f, 1.7f, -0.5f,
-        -1.0f, 0.0f, -0.5f,
+        -1.0f, 1.7f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -1.0f, 1.7f, -0.5f, 1.0f, 0.0f, 0.0f,
+        -1.0f, 0.0f, -0.5f, 1.0f, 0.0f, 0.0f,
 
         // Face traseira superior (curvatura)
-        -1.0f, 1.7f, -1.0f,
-        -1.0f, 1.7f, -0.5f,
-        -0.7f, 2.0f, -1.0f,
+        -1.0f, 1.7f, 1.0f, -0.707107f, 0.707107f, 0.0f,
+        -1.0f, 1.7f, -0.5f, -0.707107f, 0.707107f, 0.0f,
+        -0.7f, 2.0f, 1.0f, -0.707107f, 0.707107f, 0.0f,
 
-        -0.7f, 2.0f, -1.0f,
-        -1.0f, 1.7f, -0.5f,
-        -0.7f, 2.0f, -0.5f,
+        -0.7f, 2.0f, 1.0f, -0.707107f, 0.707107f, 0.0f,
+        -1.0f, 1.7f, -0.5f, -0.707107f, 0.707107f, 0.0f,
+        -0.7f, 2.0f, -0.5f, -0.707107f, 0.707107f, 0.0f,
 
         // Face frontal (fechando a parte da frente)
-        0.3f, 1.7f, -1.0f,
-        0.3f, 1.7f, -0.5f,
-        -0.7f, 1.7f, -1.0f,
+        0.3f, 1.7f, 1.0f, 0.0f, 1.0f, 0.0f,
+        0.3f, 1.7f, -0.5f, 0.0f, 1.0f, 0.0f,
+        -0.7f, 1.7f, 1.0f, 0.0f, 1.0f, 0.0f,
 
-        -0.7f, 0.0f, -1.0f,
-        -0.7f, 1.7f, -0.5f,
-        -0.7f, 0.0f, -0.5f,
+        -0.7f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        -0.7f, 1.7f, -0.5f, 1.0f, 0.0f, 0.0f,
+        -0.7f, 0.0f, -0.5f, 1.0f, 0.0f, 0.0f,
     };
-
-    processVerticesWithNormals(carVerticesWithoutNormal, 234, carVertices);
-    processVerticesWithNormals(lampVerticesWithoutNormal, 270, lampVertices);
 
     unsigned int VBOs[3], VAOs[3];
     glGenVertexArrays(3, VAOs);
@@ -605,7 +599,7 @@ int main()
         model = glm::scale(model, glm::vec3(0.2f));
         model = glm::translate(model, glm::vec3(3.5f, -2.5f, 0.0f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        animateCar(&model);
+        model = glm::translate(model, carControlledPosition);
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(carShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
@@ -647,42 +641,6 @@ int main()
 }
 
 float velocityMultiplier = 1;
-void animateCar(glm::mat4* model) {
-    if (!animate) return;
-    static int lap = 0;
-
-    float clock = ((float) glfwGetTime()) - (14.2 * lap);
-    if (clock < 2.2) {
-        carPosition.x -= 0.03 * velocityMultiplier;
-    } else if (clock < 5.5) {
-        carPosition.z -= 0.02 * velocityMultiplier;
-        float c = (clock - 2.2) * 6;
-        float xVelocity = (-0.01*c*c+0.2*c-1)/33.33;
-        if (c >= 10) {
-            xVelocity *= -1;
-        }
-        carPosition.x += xVelocity * velocityMultiplier;
-        carRotation = -180 * (clock-2.2)/(5.5-2.2);
-    } else if (clock < 9.3) {
-        carPosition.x += 0.03 * velocityMultiplier;
-    } else if (clock < 12.6) {
-        carPosition.z += 0.02  * velocityMultiplier;
-        float c = (clock - 9.3) * 6;
-        float xVelocity = (0.01*c*c-0.2*c+1)/33.33;
-        if (c >= 10) {
-            xVelocity *= -1;
-        }
-        carPosition.x += xVelocity * velocityMultiplier;
-        carRotation = -180 - (180 * (clock-9.3)/(12.6-9.3));
-    } else if (clock < 14.2) {
-        carPosition.x -= 0.03 * velocityMultiplier;
-    } else {
-        lap++;
-    }
-    *model = glm::translate(*model, carPosition);
-    *model = glm::rotate(*model, glm::radians(carRotation), glm::vec3(0.0f, 0.1f, 0.0f));
-}
-
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
@@ -704,15 +662,6 @@ void processInput(GLFWwindow *window)
         cameraPos += glm::vec3(0.0f, 1.0f, 0.0f) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
         cameraPos += glm::vec3(0.0f, -1.0f, 0.0f) * cameraSpeed;
-
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        viraCamera(0.0f,1.0f);
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        viraCamera(0.0f,-1.0f);
-    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        viraCamera(-1.0f,0.0f);
-    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        viraCamera(1.0f,0.0f);
 
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         zoomControl(1.0f);
@@ -776,32 +725,27 @@ void checkProgramLinkStatus(GLuint program) {
     }
 }
 
-// Function to compute the normal of a triangle given its three vertices
 glm::vec3 computeNormal(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2) {
     glm::vec3 edge1 = v1 - v0;
     glm::vec3 edge2 = v2 - v0;
-    glm::vec3 normal = glm::cross(edge1, edge2); // Cross product of two edges
-    return glm::normalize(normal);               // Normalize the result to unit length
+    glm::vec3 normal = glm::cross(edge1, edge2);
+    return glm::normalize(normal);
 }
 
 void processVerticesWithNormals(const float* vertices, int numVertices, float* verticesWithNormals) {
     const int numTriangles = numVertices / 3;
 
     for (int i = 0; i < numTriangles; ++i) {
-        // Get indices for the three vertices of the current triangle
         int idx0 = i * 9;
         int idx1 = idx0 + 3;
         int idx2 = idx0 + 6;
 
-        // Create glm::vec3 for each vertex
         glm::vec3 v0(vertices[idx0], vertices[idx0 + 1], vertices[idx0 + 2]);
         glm::vec3 v1(vertices[idx1], vertices[idx1 + 1], vertices[idx1 + 2]);
         glm::vec3 v2(vertices[idx2], vertices[idx2 + 1], vertices[idx2 + 2]);
 
-        // Compute the normal for the current triangle
         glm::vec3 normal = computeNormal(v0, v1, v2);
 
-        // Function to copy a vertex and its normal to the output array
         auto addVertexWithNormal = [&](int vertexIndex, int outputIndex) {
             verticesWithNormals[outputIndex]     = vertices[vertexIndex];
             verticesWithNormals[outputIndex + 1] = vertices[vertexIndex + 1];
@@ -811,7 +755,6 @@ void processVerticesWithNormals(const float* vertices, int numVertices, float* v
             verticesWithNormals[outputIndex + 5] = normal.z;
         };
 
-        // Add the vertices and their normals to the output array
         addVertexWithNormal(idx0, i * 18);
         addVertexWithNormal(idx1, i * 18 + 6);
         addVertexWithNormal(idx2, i * 18 + 12);
